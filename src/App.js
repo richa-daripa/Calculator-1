@@ -20,7 +20,7 @@ function App() {
     const value = e.target.value;
 
     const op = ['+', '-', '*', '/', '.'];
-    if (op.includes(value) && op.includes(result.slice(-1))) {
+    if (op.includes(value) && op.includes(result.toString().slice(-1))) {
       return;
     }
 
