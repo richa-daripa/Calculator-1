@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import './App.css';
+import ButtonValues from './Component/ButtonValues.jsx';
+import buttonValue from './data.js';
 import { evaluate } from 'mathjs';
+import './App.css';
 
-function App() {
 
-  const [result, setResult] = useState("");
+export default function App() {
+  const [result, setResult] = useState('');
   const [isCal, setisCal] = useState(false);
 
   const calculate = () => {
@@ -12,14 +14,20 @@ function App() {
       setResult(evaluate(result));
       setisCal(true);
     } catch (error) {
-      setResult("Error");
+      setResult('Error');
       setisCal(true);
     }
-  }
+  };
+
   const handleClick = (e) => {
     const value = e.target.value;
 
     const op = ['+', '-', '*', '/', '.'];
+
+    if ((result.toString().length === 0 || isCal === true) && op.includes(value)) {
+      return;
+    }
+
     if (op.includes(value) && op.includes(result.toString().slice(-1))) {
       return;
     }
@@ -28,10 +36,21 @@ function App() {
       setResult(value);
       setisCal(false);
     } else {
-      setResult(prev => prev + value);
+      setResult((prev) => prev + value);
     }
+  };
 
-  }
+  const handleAC = () => {
+    setResult('');
+  };
+
+  const handleDel = () => {
+    setResult(result.toString().slice(0, -1));
+  };
+
+  const percentOp = () => {
+    setResult(result / 100);
+  };
 
   return (
     <div className="App">
@@ -40,38 +59,22 @@ function App() {
           <input type="text" value={result} placeholder="0" />
         </div>
         <div>
-          <input type="button" value="AC" onClick={() => setResult("")} />
-          <input type="button" value="DEL" onClick={() => setResult(result.toString().slice(0, -1))} />
-          <input type="button" value="%" onClick={() => setResult(result / 100)} />
+          <input type="button" value="AC" onClick={handleAC} />
+          <input type="button" value="DEL" onClick={handleDel} />
+          <input type="button" value="%" onClick={percentOp} />
           <input type="button" value="/" onClick={handleClick} />
         </div>
-        <div>
-          <input type="button" value="7" onClick={handleClick} />
-          <input type="button" value="8" onClick={handleClick} />
-          <input type="button" value="9" onClick={handleClick} />
-          <input type="button" value="*" onClick={handleClick} />
-        </div>
-        <div>
-          <input type="button" value="4" onClick={handleClick} />
-          <input type="button" value="5" onClick={handleClick} />
-          <input type="button" value="6" onClick={handleClick} />
-          <input type="button" value="-" onClick={handleClick} />
-        </div>
-        <div>
-          <input type="button" value="1" onClick={handleClick} />
-          <input type="button" value="2" onClick={handleClick} />
-          <input type="button" value="3" onClick={handleClick} />
-          <input type="button" value="+" onClick={handleClick} />
-        </div>
+
+        {buttonValue.map((row) => (
+          <ButtonValues value={row} handleClick={handleClick} />
+        ))}
+
         <div>
           <input type="button" value="." onClick={handleClick} />
           <input type="button" value="0" onClick={handleClick} />
-          <input type="button" value="=" className='equal' onClick={calculate} />
+          <input type="button" value="=" className="equal" onClick={calculate} />
         </div>
       </div>
     </div>
   );
 }
-
-export default App;
-
