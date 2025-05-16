@@ -24,7 +24,7 @@ export default function App() {
 
     const op = ['+', '-', '*', '/', '.'];
 
-    if ((result.toString().length === 0 || isCal === true) && op.includes(value)) {
+    if (result.toString().length === 0  && op.includes(value)) {
       return;
     }
 
@@ -32,8 +32,12 @@ export default function App() {
       return;
     }
 
-    if (isCal) {
-      setResult(value);
+    if (isCal===true) {
+      if(op.includes(value)){
+        setResult((prev) => prev + value);
+      }else{
+        setResult(value);
+      }
       setisCal(false);
     } else {
       setResult((prev) => prev + value);
