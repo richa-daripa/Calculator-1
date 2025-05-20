@@ -75,7 +75,7 @@ export default function App() {
       if (op.includes(value)) {
         setResult((prev) => prev + value);
       } else {
-        setResult(value);
+        setResult(value);//instead of clearing, set the new input immediately
       }
       setisCal(false);
     } else {
@@ -121,3 +121,17 @@ export default function App() {
     </div>
   );
 }
+
+// if we use setResult("") instead of setResult(value) then it clears the result first
+// the next button press appends to the empty string instead of immediately
+// showing the new number
+/*
+    if (isCal === true) {
+    setResult(value);
+    } 
+    setResult((prev) => prev + value);
+    }
+      Since react does not batch state updates synchronously, the setResult gets overwritten by the second call
+      if you don't mention else
+
+*/
