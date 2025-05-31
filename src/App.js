@@ -1,54 +1,14 @@
-import React, { useState } from 'react';
-import ButtonValues from './Component/ButtonValues.jsx';
+import React, { useState, useEffect, useCallback ,useMemo} from 'react';
+import ButtonValues from './Component/ButtonValues';
 import buttonValue from './data.js';
 import './App.css';
-
+import { evaluate } from './data.js';
 
 export default function App() {
   const [result, setResult] = useState('');
   const [isCal, setisCal] = useState(false);
 
-  const evaluate = (exp) => {
-
-    let num = [];
-    let op = [];
-    let curr = "";
-    const operators = ['+', '-', '*', '/'];
-
-    let charArray = exp.split('');
-
-    for (let i = 0; i < charArray.length; i++) {
-      let char = charArray[i];
-
-      if (operators.includes(char)) {
-        num.push(Number(curr));
-        op.push(char);
-        curr = "";
-      } else {
-        curr += char;
-      }
-    }
-    num.push(Number(curr));
-
-    for (let i = 0; i < op.length; i++) {
-      if (op[i] === "*" || op[i] === '/') {
-        let a = num[i];
-        let b = num[i + 1];
-        let ans = op[i] === '*' ? a * b : a / b;
-        num.splice(i, 2, ans);
-        op.splice(i, 1);
-        i--;
-      }
-    }
-
-    let result = num[0];
-    for (let i = 0; i < op.length; i++) {
-      result = op[i] === '+' ? result + num[i + 1] : result - num[i + 1];
-    }
-    return result;
-  }
-
-  const calculate = () => {
+  const calculate = useCallback(() => {
     try {
       setResult(evaluate(result));
       setisCal(true);
@@ -56,82 +16,109 @@ export default function App() {
       setResult('Error');
       setisCal(true);
     }
-  };
+  },[result]);
+
+  const op = useMemo(()=>['+', '-', '*', '/', '.'],[]);
+  const st = ['AC', 'DE', '%'];
 
   const handleClick = (e) => {
     const value = e.target.value;
 
-    const op = ['+', '-', '*', '/', '.'];
-
-    if (result.toString().length === 0 && op.includes(value)) {
+    if (op.includes(value)) {
+      if(result.toString().length === 0){
+        setResult((prev)=>prev+'0' + value);
       return;
-    }
-
-    if (op.includes(value) && op.includes(result.toString().slice(-1))) {
-      return;
-    }
-
-    if (isCal === true) {
-      if (op.includes(value)) {
-        setResult((prev) => prev + value);
-      } else {
-        setResult(value);//instead of clearing, set the new input immediately
       }
+      if(op.includes(result.toString().slice(-1))){
+        setResult(result.toString().slice(0, -1) + value);
+      return;
+      }
+    }
+
+    if (isCal) {
+      op.includes(value)?setResult((prev) => prev + value):setResult(value);
       setisCal(false);
     } else {
       setResult((prev) => prev + value);
+      /*
+      setResult((prev)=>{
+        return prev.length<10?prev + value:prev;
+      })*/
+    }
+
+    if (st.includes(value)) {
+      switch (value) {
+        case 'AC':
+          setResult('');
+          break;
+        case 'DE':
+          setResult(result.toString().slice(0, -1));
+          break;
+        case '%':
+          setResult(result / 100);
+          setisCal(true);
+          break;
+      }
     }
   };
 
-  const handleAC = () => {
-    setResult('');
-  };
+  const handleKeydown = useCallback((event) => {
+    const key = event.key;
 
-  const handleDel = () => {
-    setResult(result.toString().slice(0, -1));
-  };
+    if(key==='Shift') return;
 
-  const percentOp = () => {
-    setResult(result / 100);
-  };
+    if (op.includes(key)) {
+      if(result.toString().length === 0){
+        setResult((prev)=>prev+'0' + key);
+      return;
+      }
+      if(op.includes(result.toString().slice(-1))){
+        setResult(result.toString().slice(0, -1) + key);
+      return;
+      }
+    }
+
+    if (isCal) {
+      op.includes(key)?setResult((prev) => prev + key):setResult(key);
+      setisCal(false);
+    } else {
+      setResult((prev) => prev + key);
+    }
+    
+    if (key === 'Enter') {
+      calculate();
+    } else if (key === 'Backspace') {
+      setResult(result.toString().slice(0, -1));
+    } else if (key === 'Delete') {
+      setResult('');
+    } else if (key === '%' ||(event.shiftKey && key === '5')) {
+      setResult(result/100);
+      setisCal(true);
+    } 
+  },[result,isCal,setResult,op,calculate,setisCal]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeydown);
+    return () => {
+      window.removeEventListener('keydown', handleKeydown);
+    };
+  }, [handleKeydown]);
 
   return (
     <div className="App">
       <div className="container">
         <div className="display">
-          <input type="text" value={result} placeholder="0" />
+          <input type="text" value={result} placeholder="0" readOnly />
         </div>
-        <div>
-          <input type="button" value="AC" onClick={handleAC} />
-          <input type="button" value="DE" onClick={handleDel} />
-          <input type="button" value="%" onClick={percentOp} />
-          <input type="button" value="/" onClick={handleClick} />
-        </div>
-
-        {buttonValue.map((row) => (
-          <ButtonValues value={row} handleClick={handleClick} />
+        {buttonValue.map((row,index) => (
+          <ButtonValues
+          key={index}
+            value={row}
+            handleClick={handleClick}
+            calculate={calculate}
+          />
         ))}
-
-        <div>
-          <input type="button" value="." onClick={handleClick} />
-          <input type="button" value="0" onClick={handleClick} />
-          <input type="button" value="=" className="equal" onClick={calculate} />
-        </div>
       </div>
     </div>
   );
 }
-
-// if we use setResult("") instead of setResult(value) then it clears the result first
-// the next button press appends to the empty string instead of immediately
-// showing the new number
-/*
-    if (isCal === true) {
-    setResult(value);
-    } 
-    setResult((prev) => prev + value);
-    }
-      Since react does not batch state updates synchronously, the setResult gets overwritten by the second call
-      if you don't mention else
-
-*/
